@@ -385,6 +385,21 @@ object errors {
 
     def withReason(r: ErrorReason) = VerificationErrorWithCounterexample(ve.withReason(r), model, symState, currentMember)
   }
+
+  case class SoundnessFailed(offendingNode: Stmt, reason: ErrorReason, s: String = "ignore", n: Int = 1, checkType: String = "FRAMING") extends AbstractVerificationError {
+    val id = "not." + s
+    val text = checkType + " " + n + ": " + {
+      if (s == "ignore") {
+        "IGNORE"
+      }
+      else {
+        "Statement might not be " + s
+      }
+    }
+    def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
+      SoundnessFailed(offendingNode.asInstanceOf[Stmt], this.reason, s, n)
+    def withReason(r: ErrorReason) = SoundnessFailed(offendingNode, r, s, n)
+  }
 }
 
 object reasons {
@@ -500,4 +515,6 @@ object reasons {
     def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
       SeqIndexExceedsLength(seq, offendingNode.asInstanceOf[Exp])
   }
+
+
 }
