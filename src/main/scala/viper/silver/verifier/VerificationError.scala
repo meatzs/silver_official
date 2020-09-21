@@ -455,14 +455,22 @@ object errors {
     def withReason(r: ErrorReason) = VerificationErrorWithCounterexample(ve.withReason(r), model, symState, currentMember)
   }
 
-  case class SoundnessFailed(offendingNode: Stmt, reason: ErrorReason, s: String = "ignore", n: Int = 1, checkType: String = "FRAMING") extends AbstractVerificationError {
+  case class SoundnessFailed(offendingNode: Stmt, reason: ErrorReason, s: String = "ignore", n: Int = 1, checkType: String = "FRAMING", add_text: String = "") extends AbstractVerificationError {
     val id = "not." + s
-    val text = checkType + " " + n + ": " + {
+    var text = checkType + " " + n + ": " + {
       if (s == "ignore") {
         "IGNORE"
       }
       else {
         "Statement might not be " + s
+      }
+    } +
+    {
+      if (add_text == "") {
+        ""
+      }
+      else {
+        " (" + add_text + ")"
       }
     }
     def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
