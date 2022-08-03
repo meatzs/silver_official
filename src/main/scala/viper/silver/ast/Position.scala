@@ -42,7 +42,6 @@ trait AbstractSourcePosition extends HasLineColumn{
   def file: Path
   def start: HasLineColumn
   def end: Option[HasLineColumn]
-  def stack: Option[Seq[Position]] = None
 
   lazy val line = start.line
   lazy val column = start.column

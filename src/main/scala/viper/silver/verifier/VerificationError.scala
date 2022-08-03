@@ -185,9 +185,8 @@ object errors {
     def withReason(r: ErrorReason) = AssignmentFailed(offendingNode, r)
   }
 
-  def AssignmentFailed(offendingNode: AbstractAssign): PartialVerificationError = {
+  def AssignmentFailed(offendingNode: AbstractAssign): PartialVerificationError =
     PartialVerificationError((reason: ErrorReason) => AssignmentFailed(offendingNode, reason))
-  }
 
   case class CallFailed(offendingNode: MethodCall, reason: ErrorReason, override val cached: Boolean = false) extends AbstractVerificationError {
     val id = "call.failed"
@@ -477,12 +476,7 @@ object errors {
       else {
         " (" + add_text + ") "
       }
-     } +
-    {//if verifier has inlining flag set
-      if (true) {
-        "at inlining depth: "
-      }
-    }
+     }
     def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
       SoundnessFailed(offendingNode.asInstanceOf[Stmt], this.reason, s, n)
     def withReason(r: ErrorReason) = SoundnessFailed(offendingNode, r, s, n)
