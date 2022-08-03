@@ -67,6 +67,7 @@ trait ErrorMessage {
 
 trait VerificationError extends AbstractError with ErrorMessage {
   def reason: ErrorReason
+
   def readableMessage(withId: Boolean = false, withPosition: Boolean = false): String
   override def readableMessage : String = {
     val rm : String = readableMessage(false, true)
@@ -81,14 +82,14 @@ trait VerificationError extends AbstractError with ErrorMessage {
   var counterexample : Option[Counterexample] = None
 }
 
-/// used when an error/reason has no sensible node to use
+/** used when an error/reason has no sensible node to use */
 case object DummyNode extends Node with Positioned with TransformableErrors with Rewritable {
   val pos = NoPosition
   val info = NoInfo
   val errT = NoTrafos
 }
 
-/// used when an error has no sensible reason
+/** used when an error has no sensible reason */
 case object DummyReason extends AbstractErrorReason {
   val id = "?"
   val readableMessage = "?"
@@ -131,11 +132,13 @@ abstract class AbstractVerificationError extends VerificationError {
 
   def pos = offendingNode.pos
 
+
   def readableMessage(withId: Boolean, withPosition: Boolean) = {
     val idStr = if (withId) s"[$fullId] " else ""
     val posStr = if (withPosition) s" ($pos)" else ""
+    val inline = if (offendingNode.inlMsg.isDefined) s" ${offendingNode.inlMsg}" else ""
 
-    s"$idStr$text ${reason.readableMessage}$posStr"
+    s"$idStr$text ${reason.readableMessage}$posStr $inline"
   }
 
   /** Transform the error back according to the specified error transformations */
@@ -152,6 +155,7 @@ abstract class AbstractVerificationError extends VerificationError {
 
   override def toString = readableMessage(true, true)
 }
+
 
 abstract class AbstractErrorReason extends ErrorReason {
   def pos = offendingNode.pos
@@ -181,8 +185,9 @@ object errors {
     def withReason(r: ErrorReason) = AssignmentFailed(offendingNode, r)
   }
 
-  def AssignmentFailed(offendingNode: AbstractAssign): PartialVerificationError =
+  def AssignmentFailed(offendingNode: AbstractAssign): PartialVerificationError = {
     PartialVerificationError((reason: ErrorReason) => AssignmentFailed(offendingNode, reason))
+  }
 
   case class CallFailed(offendingNode: MethodCall, reason: ErrorReason, override val cached: Boolean = false) extends AbstractVerificationError {
     val id = "call.failed"
@@ -470,7 +475,12 @@ object errors {
         ""
       }
       else {
-        " (" + add_text + ")"
+        " (" + add_text + ") "
+      }
+     } +
+    {//if verifier has inlining flag set
+      if (true) {
+        "at inlining depth: "
       }
     }
     def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
