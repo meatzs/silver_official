@@ -75,7 +75,6 @@ trait ErrorMessage {
 
 trait VerificationError extends AbstractError with ErrorMessage {
   def reason: ErrorReason
-
   def readableMessage(withId: Boolean = false, withPosition: Boolean = false): String
   override def readableMessage : String = {
     val rm : String = readableMessage(false, true)
