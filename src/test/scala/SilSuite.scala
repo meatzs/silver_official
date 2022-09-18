@@ -55,7 +55,7 @@ abstract class SilSuite extends AnnotationBasedTestSuite with BeforeAndAfterAllC
     *
     * @param configMap The config map provided by ScalaTest.
     */
-  override def beforeAll(configMap: ConfigMap) {
+  override def beforeAll(configMap: ConfigMap): Unit = {
     configureVerifiersFromConfigMap(configMap)
     verifiers foreach (_.start())
   }
@@ -63,7 +63,7 @@ abstract class SilSuite extends AnnotationBasedTestSuite with BeforeAndAfterAllC
   /** Invoked by ScalaTest after all tests of the current suite have been run.
    * Stops all verifiers specified by `verifiers`.
    */
-  override def afterAll(configMap: ConfigMap) {
+  override def afterAll(configMap: ConfigMap): Unit = {
     verifiers foreach (_.stop())
   }
 
@@ -92,7 +92,7 @@ abstract class SilSuite extends AnnotationBasedTestSuite with BeforeAndAfterAllC
         prefixSpecificConfigMap.getOrElseUpdate(prefix, mutable.HashMap()).update(key, value)
     }
 
-    prefixSpecificConfigMap.mapValues(_.toMap).toMap
+    prefixSpecificConfigMap.view.mapValues(_.toMap).toMap
   }
 
   private case class VerifierUnderTest(verifier: Verifier)
@@ -103,7 +103,7 @@ abstract class SilSuite extends AnnotationBasedTestSuite with BeforeAndAfterAllC
     def run(input: AnnotatedTestInput): Seq[AbstractOutput] = {
       val fe = frontend(verifier, input.files)
       val tPhases = fe.phases.map { p =>
-        formatTime(time(p.action)._2) + " (" + p.name + ")"
+        formatTime(time(p.f)._2) + " (" + p.name + ")"
       }.mkString(", ")
       info(s"Verifier used: ${verifier.name} ${verifier.version}.")
       info(s"Time required: $tPhases.")

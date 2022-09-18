@@ -50,7 +50,7 @@ object AssumeRewriter {
         }
       case (pred: PredicateAccessPredicate, c) =>
         val insideWand = c.ancestorList.foldLeft[Boolean](false)((b, n) => b || n.isInstanceOf[MagicWand])
-        val dummyVars = (Stream.from(0) map (i => LocalVar("dummy" + i, pred.loc.loc(program).formalArgs(i).typ)())) take pred.loc.args.length
+        val dummyVars = (LazyList.from(0) map (i => LocalVar("dummy" + i, pred.loc.loc(program).formalArgs(i).typ)())) take pred.loc.args.length
         val eqs = (pred.loc.args zip dummyVars) map (a => EqCmp(a._1, a._2)())
         val cond = eqs.tail.foldLeft[Exp](eqs.head)((a, e) => And(a,e)())
         val ctx = c.updateContext(c.c + (pred.loc.loc(program) -> (c.c.getOrElse(pred.loc.loc(program), Seq()) :+ ((cond, dummyVars), pred.perm))))
@@ -62,7 +62,7 @@ object AssumeRewriter {
           (pred, ctx)
         }
       case (wand: MagicWand, c) =>
-        val dummyVars = (Stream.from(0) map (i => LocalVar("dummy" + i, wand.structure(program).subexpressionsToEvaluate(program)(i).typ)())) take wand.subexpressionsToEvaluate(program).length
+        val dummyVars = (LazyList.from(0) map (i => LocalVar("dummy" + i, wand.structure(program).subexpressionsToEvaluate(program)(i).typ)())) take wand.subexpressionsToEvaluate(program).length
         val eqs = (wand.subexpressionsToEvaluate(program) zip dummyVars) map (a => EqCmp(a._1, a._2)())
         val cond = eqs.tail.foldLeft[Exp](eqs.head)((a, e) => And(a,e)())
         val ctx = c.updateContext(c.c + (wand.structure(program) -> (c.c.getOrElse(wand.structure(program), Seq()) :+ ((cond, dummyVars), FullPerm()()))))
@@ -129,12 +129,12 @@ object AssumeRewriter {
         val dummyVar = LocalVar("dummy", Ref)()
         Seq(fp.loc.field -> Seq(((EqCmp(fp.loc.rcv, dummyVar)(fp.pos, fp.info, fp.errT), Seq(dummyVar)), fp.perm)))
       case pred: PredicateAccessPredicate =>
-        val dummyVars = (Stream.from(0) map (i => LocalVar("dummy" + i, pred.loc.loc(program).formalArgs(i).typ)())) take pred.loc.args.length
+        val dummyVars = (LazyList.from(0) map (i => LocalVar("dummy" + i, pred.loc.loc(program).formalArgs(i).typ)())) take pred.loc.args.length
         val eqs = (pred.loc.args zip dummyVars) map (a => EqCmp(a._1, a._2)())
         val cond = eqs.tail.foldLeft[Exp](eqs.head)((a, e) => And(a,e)())
         Seq(pred.loc.loc(program) -> Seq(((cond, dummyVars), pred.perm)))
       case wand: MagicWand =>
-        val dummyVars = (Stream.from(0) map (i => LocalVar("dummy" + i, wand.structure(program).subexpressionsToEvaluate(program)(i).typ)())) take wand.subexpressionsToEvaluate(program).length
+        val dummyVars = (LazyList.from(0) map (i => LocalVar("dummy" + i, wand.structure(program).subexpressionsToEvaluate(program)(i).typ)())) take wand.subexpressionsToEvaluate(program).length
         val eqs = (wand.subexpressionsToEvaluate(program) zip dummyVars) map (a => EqCmp(a._1, a._2)())
         val cond = eqs.tail.foldLeft[Exp](eqs.head)((a, e) => And(a,e)())
         Seq(wand.structure(program) -> Seq(((cond, dummyVars), FullPerm()())))
@@ -294,7 +294,7 @@ object AssumeRewriter {
       pAssume
     } else {
       ViperStrategy.Slim({
-        case p: Program if funcs.nonEmpty =>
+        case p: Program =>
           val assumeDomain = Domain(domainName, funcs, axioms)(info = Synthesized)
 
           Program(p.domains ++ domains :+ assumeDomain, p.fields, p.functions, p.predicates, p.methods, p.extensions)(p.pos, p.info, p.errT)
