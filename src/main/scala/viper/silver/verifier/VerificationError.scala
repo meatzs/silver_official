@@ -89,14 +89,14 @@ trait VerificationError extends AbstractError with ErrorMessage {
   var counterexample : Option[Counterexample] = None
 }
 
-/// used when an error/reason has no sensible node to use
+/** used when an error/reason has no sensible node to use */
 case object DummyNode extends Node with Positioned with TransformableErrors with Rewritable {
   val pos = NoPosition
   val info = NoInfo
   val errT = NoTrafos
 }
 
-/// used when an error has no sensible reason
+/** used when an error has no sensible reason */
 case object DummyReason extends AbstractErrorReason {
   val id = "?"
   val readableMessage = "?"
@@ -139,11 +139,13 @@ abstract class AbstractVerificationError extends VerificationError {
 
   def pos = offendingNode.pos
 
+
   def readableMessage(withId: Boolean, withPosition: Boolean) = {
     val idStr = if (withId) s"[$fullId] " else ""
     val posStr = if (withPosition) s" ($pos)" else ""
+    val inline = if (offendingNode.inlMsg.isDefined) s" ${offendingNode.inlMsg}" else ""
 
-    s"$idStr$text ${reason.readableMessage}$posStr"
+    s"$idStr$text ${reason.readableMessage}$posStr $inline"
   }
 
   /** Transform the error back according to the specified error transformations */
@@ -160,6 +162,7 @@ abstract class AbstractVerificationError extends VerificationError {
 
   override def toString = readableMessage(true, true) + (if (cached) " - cached" else "")
 }
+
 
 abstract class AbstractErrorReason extends ErrorReason {
   def pos = offendingNode.pos
@@ -466,6 +469,29 @@ object errors {
 
     def withReason(r: ErrorReason) = VerificationErrorWithCounterexample(ve.withReason(r), model, symState, currentMember)
   }
+
+  case class SoundnessFailed(offendingNode: Stmt, reason: ErrorReason, s: String = "ignore", n: Int = 1, checkType: String = "FRAMING", add_text: String = "") extends AbstractVerificationError {
+    val id = "not." + s
+    var text = checkType + " " + n + ": " + {
+      if (s == "ignore") {
+        "IGNORE"
+      }
+      else {
+        "Statement might not be " + s
+      }
+    } +
+    {
+      if (add_text == "") {
+        ""
+      }
+      else {
+        " (" + add_text + ") "
+      }
+     }
+    def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
+      SoundnessFailed(offendingNode.asInstanceOf[Stmt], this.reason, s, n)
+    def withReason(r: ErrorReason) = SoundnessFailed(offendingNode, r, s, n)
+  }
 }
 
 object reasons {
@@ -581,4 +607,6 @@ object reasons {
     def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
       SeqIndexExceedsLength(seq, offendingNode.asInstanceOf[Exp])
   }
+
+
 }
