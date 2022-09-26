@@ -608,5 +608,11 @@ object reasons {
       SeqIndexExceedsLength(seq, offendingNode.asInstanceOf[Exp])
   }
 
+  case class MapKeyNotContained(map: Exp, offendingNode: Exp) extends AbstractErrorReason {
+    val id = "map.key.contains"
+    def readableMessage = s"Map $map might not contain an entry at key $offendingNode."
 
+    def withNode(offendingNode: errors.ErrorNode = this.offendingNode) =
+      MapKeyNotContained(map, offendingNode.asInstanceOf[Exp])
+  }
 }
